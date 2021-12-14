@@ -1,0 +1,31 @@
+import express from 'express';
+import dotenv from 'dotenv';
+
+//kalder
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 4000;
+
+app.get('/', (req, res) => {// /betyder bare at der ikke kommer noget efter 4000
+    res.send('Velkommen til forsiden');
+})
+
+app.get('/about', (req, res) => {// 4000/about
+    res.send('Om os...');
+})
+
+app.get('/products', (req, res) => { //4000/products
+    res.send('Produktliste');
+})
+
+app.use((req, res, next) => { //next refererer til noget middelware (kan fx bruges til noget login til)?
+    res.status(404).send(
+        '<h1>Page not found on the server</h1>')
+})
+
+app.listen(port, () => { //det er fordi det er den port vi kører på
+    console.log(`Server is running on port ${port}...`); //logger nede i terminalen
+})
+
+//nodemon monotorerer (holder øje)
