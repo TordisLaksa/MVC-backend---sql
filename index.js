@@ -5,22 +5,36 @@ import dotenv from 'dotenv';
 import { router as SongRouter } from './Routes/song.router.js';
 import { router as ArtistRouter } from './Routes/artist.router.js';
 import { router as UserRouter } from './Routes/user.router.js';
+import { router as InitRouter } from './Routes/init.sequelize.router.js';
 
 //kalder environment vars
 dotenv.config();
 
-const port = process.env.PORT || 3030;
 
 //express er et framework
 const app = new express();
+
+
 app.use(express.urlencoded({
     extended: true
 }));
-app.use(express.json())
+
+// det her behøver jeg ikke når jeg får det lavet i min controller?
+//app.use(express.json())
+
+app.use((req, res, next) => {
+    res.append('Access-Control-Allow-Origin', ['*']);
+    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.append('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+})
+
+const port = process.env.PORT || 3030;
 
 app.use(SongRouter);
 app.use(ArtistRouter);
 app.use(UserRouter);
+app.use(InitRouter);
 
 app.listen(port, () => {
     console.log(`Server kører på port http://localhost:${port}`);

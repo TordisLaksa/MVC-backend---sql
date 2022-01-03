@@ -1,40 +1,99 @@
-import SongModel from '../models/song.model.js'
-const model = new SongModel();
+import { Sequelize } from 'sequelize';
+import SongModel from '../models/song.model.js';
+import ArtistModel from '../models/artist.model.js';
 
+const Op = Sequelize.Op;
+
+ArtistModel.hasMany(SongModel)
+SongModel.belongsTo(ArtistModel)
 class SongController {
-    constructor() {
-        console.log('Class song controller is loaded');
-    }
-    //list henter et array (mange)
+    //Class constructor
+    constructor() { }
+
+    /* Song controller Methods Begin */
     list = async (req, res) => {
-        const result = await model.list(req, res);
-        res.json(result);
+        const orderby = req.query.orderby || 'id'
+        const limit = req.query.linit || 10000
+        const result = await SongModel.findAll({
+            attributes: ['id', 'title'],
+            limit: Number(limit),
+            oder: [orderby],
+            include: {
+                model: ArtistModel,
+                attributes: ['id', 'name']
+            }
+        })
+        res.json(result)
     }
-    //get henter et object (1)
+
     get = async (req, res) => {
-        const result = await model.get(req, res);
-        res.json(result);
+        const result = await SongModel.findAll({
+            where: { id: req.params.id },
+            include: {
+                model: ArtistModel,
+                attributes: ['name']
+            }
+        })
+        //spread... for at få det som et object istedet for et array
+        res.json(...result)
     }
 
     create = async (req, res) => {
-        const result = await model.create(req, res);
-        res.json(result);
+        //destructuring assignment
+        const { title, content, artist_id } = req.body;
+
+        if (title && content && artist_id) {
+            const model = await SongModel.create(req.body)
+            return res.json({ newid: model.id })
+        } else {
+            res.send(418)
+        }
     }
 
     update = async (req, res) => {
-        const result = await model.update(req, res);
-        res.json(result);
+        //destructuring assignment
+        const { title, content, artist_id, id } = req.body;
+
+        if (title && content && artist_id && id) {
+            const model = await SongModel.update(req.body, { where: { id: id } })
+            return res.json({ status: true })
+        } else {
+            res.send(418)
+        }
+    }
+
+    search = async (req, res) => {
+        const result = await SongModel.findAll({
+            where: {
+                title: {
+                    //lige som i Heidi så sætter vi % ind
+                    [Op.like]: `%${req.query.keyword}%`
+                },
+                content: {
+                    [Op.like]: `%${req.query.keyword}%`
+                }
+            },
+            attributes: ['id', 'title'],
+            include: {
+                model: ArtistModel,
+                attributes: ['id', 'name']
+            }
+        })
+        res.json(result)
     }
 
     delete = async (req, res) => {
-        const result = await model.delete(req, res);
-        res.json(result);
+        try {
+            await SongModel.destroy({ where: { id: req.params.id } })
+            res.sendStatus(200)
+        }
+        catch (err) {
+            res.send(err)
+        }
     }
-    //min search 
-    search = async (req, res) => {
-        const result = await model.search(req, res);
-        res.json(result);
-    }
+
+    /* Song controller Methods End */
+
 }
 
 export default SongController;
